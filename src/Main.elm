@@ -1,5 +1,6 @@
 module Main exposing (..)
 
+import Browser
 import Dict
 import HexGrid exposing (Direction(..), HexGrid(..))
 import Html exposing (Html, a, div, h1, hr, small)
@@ -12,6 +13,11 @@ import String
 import Svg exposing (Svg, g, polygon, text, text_)
 import Svg.Attributes as Sattr exposing (fill, points, stroke, x, y)
 import Svg.Events as Sevent exposing (onClick, onMouseOver)
+
+
+toString : a -> String
+toString value =
+    Debug.toString value
 
 
 type alias Demo =
@@ -92,7 +98,7 @@ forceGet key dict =
             v
 
         Nothing ->
-            Debug.crash "Impossible"
+            Debug.todo "Impossible"
 
 
 update : Msg -> Model -> Model
@@ -275,7 +281,7 @@ viewDirectionTo model =
                     , text_
                         [ x (toString <| centerX - 10)
                         , y (toString <| centerY - 5)
-                        , Hattr.style [ ( "font-size", "18px" ) ]
+                        , Sattr.style "font-size: 18px;"
                         ]
                         [ text <|
                             if point == model.hoverPoint then
@@ -538,7 +544,7 @@ viewReachable model =
                     , text_
                         [ x (toString <| centerX - 10)
                         , y (toString <| centerY - 5)
-                        , Hattr.style [ ( "font-size", "18px" ) ]
+                        , Sattr.style "font-size: 18px;"
                         ]
                         [ text <|
                             if point == ( 0, 0 ) then
@@ -550,7 +556,7 @@ viewReachable model =
                         [ stroke "blue"
                         , x (toString <| centerX - 5)
                         , y (toString <| centerY + 10)
-                        , Hattr.style [ ( "font-size", "18px" ) ]
+                            , Sattr.style "font-size: 18px;"
                         ]
                         [ text <|
                             case Dict.get point counts of
@@ -690,7 +696,7 @@ viewRotation model =
                         , fill "white"
                         , x (toString <| centerX - 20)
                         , y (toString <| centerY + 5)
-                        , Hattr.style [ ( "font-size", "12px" ) ]
+                        , Sattr.style "font-size: 12px;"
                         ]
                         [ text <|
                             if point == left1 then
@@ -973,10 +979,7 @@ viewFogOfWar model =
                         , fill "white"
                         , x (toString <| centerX - 10)
                         , y (toString <| centerY + 5)
-                        , Hattr.style
-                            [ ( "font-family", "monospace" )
-                            , ( "font-size", "18px" )
-                            ]
+                        , Sattr.style "font-family: monospace; font-size: 18px;"
                         ]
                         [ text <|
                             if point == ( 0, 0 ) then
@@ -989,10 +992,7 @@ viewFogOfWar model =
                         , fill "black"
                         , x (toString <| centerX - 8)
                         , y (toString <| centerY + 7)
-                        , Hattr.style
-                            [ ( "font-family", "monospace" )
-                            , ( "font-size", "24px" )
-                            ]
+                        , Sattr.style "font-family: monospace; font-size: 24px;"
                         ]
                         [ text <|
                             if Set.member point pointsInPath then
@@ -1105,10 +1105,7 @@ viewPathfinding model =
                         , fill "black"
                         , x (toString <| centerX - 10)
                         , y (toString <| centerY + 5)
-                        , Hattr.style
-                            [ ( "font-family", "monospace" )
-                            , ( "font-size", "18px" )
-                            ]
+                        , Sattr.style "font-family: monospace; font-size: 18px;"
                         ]
                         [ text <|
                             if point == ( 0, 0 ) then
@@ -1121,10 +1118,7 @@ viewPathfinding model =
                         , fill "black"
                         , x (toString <| centerX - 8)
                         , y (toString <| centerY + 7)
-                        , Hattr.style
-                            [ ( "font-family", "monospace" )
-                            , ( "font-size", "24px" )
-                            ]
+                        , Sattr.style "font-family: monospace; font-size: 24px;"
                         ]
                         [ Svg.text <|
                             if List.member point path && point /= ( 0, 0 ) then
@@ -1248,9 +1242,7 @@ viewPathfindingWithCost model =
                         , Sattr.fill "black"
                         , Sattr.x (toString <| centerX - 10)
                         , Sattr.y (toString <| centerY + 5)
-                        , Hattr.style
-                            [ ( "font-size", "18px" )
-                            ]
+                        , Sattr.style "font-size: 18px;"
                         ]
                         [ Svg.text <|
                             if point == ( 0, 0 ) then
@@ -1263,9 +1255,7 @@ viewPathfindingWithCost model =
                         , Sattr.fill "black"
                         , Sattr.x (toString <| centerX - 8)
                         , Sattr.y (toString <| centerY + 7)
-                        , Hattr.style
-                            [ ( "font-size", "24px" )
-                            ]
+                        , Sattr.style "font-size: 24px;"
                         ]
                         [ Svg.text <|
                             if List.member point path && point /= ( 0, 0 ) then
@@ -1290,7 +1280,7 @@ viewPathfindingWithCostDemo demo =
                 []
                 [ Html.text "Pathfinding with Movement Cost"
                 , Html.small
-                    [ Hattr.style [ ( "display", "block" ) ] ]
+                    [ Hattr.style "display" "block" ]
                     [ Html.text "Dijkstra's Algorithm" ]
                 ]
             , Html.p
@@ -1377,8 +1367,8 @@ view model =
 
 
 main =
-    Html.beginnerProgram
-        { model = init
+    Browser.sandbox
+        { init = init
         , update = update
         , view = view
         }

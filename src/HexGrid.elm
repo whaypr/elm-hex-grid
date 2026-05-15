@@ -229,7 +229,7 @@ fringes start maxSteps obstacles =
                                 Set.toList points
 
                             Nothing ->
-                                Debug.crash "Impossible"
+                                Debug.todo "Impossible"
 
                     ( visited_, fringeLevel ) =
                         List.foldl
@@ -288,7 +288,7 @@ countSteps start end obstacles maxSteps =
                     else
                         Nothing
     in
-        Array.foldl accum Nothing (Array.indexedMap (,) fringe)
+        Array.foldl accum Nothing (Array.indexedMap (\index value -> ( index, value )) fringe)
 
 
 {-| Creates a map of Point -> stepCount to reach that point.
@@ -306,7 +306,7 @@ stepCounts maxSteps obstacles start =
         accum ( level, pts ) dict =
             Set.foldl (\p -> Dict.insert p level) dict pts
     in
-        Array.foldl accum Dict.empty (Array.indexedMap (,) fringe)
+        Array.foldl accum Dict.empty (Array.indexedMap (\index value -> ( index, value )) fringe)
 
 
 {-| Returns set of points that point `eye` cannot see
@@ -321,18 +321,18 @@ fogOfWar eye obstacles grid =
                 path =
                     line eye end
 
-                fogAccum point ( hitWall, fogs ) =
+                fogAccum point ( hitWall, accumulatedFog ) =
                     if hitWall then
-                        ( True, Set.insert point fogs )
+                        ( True, Set.insert point accumulatedFog )
                     else if Set.member point obstacles then
-                        ( True, Set.insert point fogs )
+                        ( True, Set.insert point accumulatedFog )
                     else
-                        ( False, fogs )
+                        ( False, accumulatedFog )
 
-                ( _, fogs ) =
+                ( _, finalFogPoints ) =
                     List.foldl fogAccum ( False, Set.empty ) path
             in
-                Set.union obstructed fogs
+                Set.union obstructed finalFogPoints
     in
         foldl accum Set.empty grid
 
@@ -416,32 +416,31 @@ to another.
 directionTo : Point -> Point -> Maybe Int
 directionTo p1 p2 =
     case line p1 p2 of
-        _ :: neighbor :: _ ->
+        _ :: adjacentPoint :: _ ->
             let
                 ( dx, dz ) =
-                    pointSubtract neighbor p1
+                    pointSubtract adjacentPoint p1
             in
-                case ( dx, dz ) of
-                    ( 1, 0 ) ->
-                        Just 0
+                if dx == 1 && dz == 0 then
+                    Just 0
 
-                    ( 1, -1 ) ->
-                        Just 1
+                else if dx == 1 && dz == -1 then
+                    Just 1
 
-                    ( 0, -1 ) ->
-                        Just 2
+                else if dx == 0 && dz == -1 then
+                    Just 2
 
-                    ( -1, 0 ) ->
-                        Just 3
+                else if dx == -1 && dz == 0 then
+                    Just 3
 
-                    ( -1, 1 ) ->
-                        Just 4
+                else if dx == -1 && dz == 1 then
+                    Just 4
 
-                    ( 0, 1 ) ->
-                        Just 5
+                else if dx == 0 && dz == 1 then
+                    Just 5
 
-                    _ ->
-                        Nothing
+                else
+                    Nothing
 
         _ ->
             Nothing
@@ -555,11 +554,21 @@ ring r ( x, z ) =
         if r < 0 then
             []
         else
-            List.scanl
-                (\i p_ -> neighbor i p_)
-                p
-                (List.concatMap (\j -> List.repeat r j) (List.range 0 5))
+            let
+                directions =
+                    List.concatMap (\j -> List.repeat r j) (List.range 0 5)
 
+                step direction ( current, points ) =
+                    let
+                        next =
+                            neighbor direction current
+                    in
+                        ( next, next :: points )
+
+                ( _, reversedPoints ) =
+                    List.foldl step ( p, [ p ] ) directions
+            in
+                List.reverse reversedPoints
 
 {-| Start at the center and spiral outwards until all points at
 radius `r` are included. Spiral jumps out to the southwest tile.
@@ -675,32 +684,45 @@ type alias Layout =
     }
 
 
-getOrientationParams : Orientation -> ( Float, Float, Float, Float, Float, Float, Float, Float, Float )
+type alias OrientationParams =
+    { f0 : Float
+    , f1 : Float
+    , f2 : Float
+    , f3 : Float
+    , b0 : Float
+    , b1 : Float
+    , b2 : Float
+    , b3 : Float
+    , startAngle : Float
+    }
+
+
+getOrientationParams : Orientation -> OrientationParams
 getOrientationParams orientation =
     case orientation of
         PointyTop ->
-            ( sqrt 3.0
-            , sqrt 3.0 / 2.0
-            , 0.0
-            , 3.0 / 2.0
-            , sqrt 3.0 / 3.0
-            , -1.0 / 3.0
-            , 0.0
-            , 2.0 / 3.0
-            , 0.5
-            )
+            { f0 = sqrt 3.0
+            , f1 = sqrt 3.0 / 2.0
+            , f2 = 0.0
+            , f3 = 3.0 / 2.0
+            , b0 = sqrt 3.0 / 3.0
+            , b1 = -1.0 / 3.0
+            , b2 = 0.0
+            , b3 = 2.0 / 3.0
+            , startAngle = 0.5
+            }
 
         FlatTop ->
-            ( 3.0 / 2.0
-            , 0.0
-            , sqrt 3.0 / 2.0
-            , sqrt 3.0
-            , 2.0 / 3.0
-            , 0.0
-            , -1.0 / 3.0
-            , sqrt 3.0 / 3.0
-            , 0.0
-            )
+            { f0 = 3.0 / 2.0
+            , f1 = 0.0
+            , f2 = sqrt 3.0 / 2.0
+            , f3 = sqrt 3.0
+            , b0 = 2.0 / 3.0
+            , b1 = 0.0
+            , b2 = -1.0 / 3.0
+            , b3 = sqrt 3.0 / 3.0
+            , startAngle = 0.0
+            }
 
 
 mkPointyTop : Float -> Float -> Float -> Float -> Layout
@@ -716,14 +738,14 @@ mkFlatTop screenX screenY originX originY =
 hexToPixel : Layout -> Point -> ( Float, Float )
 hexToPixel layout ( q, r ) =
     let
-        ( f0, f1, f2, f3, _, _, _, _, _ ) =
+        params =
             getOrientationParams layout.orientation
 
         x =
-            (f0 * toFloat q + f1 * toFloat r) * layout.screenX
+            (params.f0 * toFloat q + params.f1 * toFloat r) * layout.screenX
 
         y =
-            (f2 * toFloat q + f3 * toFloat r) * layout.screenY
+            (params.f2 * toFloat q + params.f3 * toFloat r) * layout.screenY
     in
         ( x + layout.originX, y + layout.originY )
 
@@ -731,11 +753,11 @@ hexToPixel layout ( q, r ) =
 hexCornerOffset : Layout -> Float -> ( Float, Float )
 hexCornerOffset layout corner =
     let
-        ( _, _, _, _, _, _, _, _, startAngle ) =
+        params =
             getOrientationParams layout.orientation
 
         angle =
-            2.0 * pi * (corner + startAngle) / 6
+            2.0 * pi * (corner + params.startAngle) / 6
     in
         ( layout.screenX * cos angle, layout.screenY * sin angle )
 
@@ -849,7 +871,7 @@ pathGraphHelp2 calcCost grid curr next (( frontier, costSoFar, cameFrom ) as mem
                         cost
 
                     Nothing ->
-                        Debug.crash "Impossible"
+                        Debug.todo "Impossible"
 
             newCost =
                 currCost + calcCost curr next

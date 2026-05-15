@@ -10,6 +10,7 @@ around hex grids in Elm.
 
 ## Development
 
+    npm install
     npm start
 
-And visit <http://localhost:3000>.
+Builds the Elm app with `elm make`, copies the static assets to `dist/`, and serves the result on <http://localhost:3000>.
