@@ -10,7 +10,20 @@ around hex grids in Elm.
 
 ## Development
 
-    npm install
-    npm start
+Install dependencies:
 
-Builds the Elm app with `elm make`, copies the static assets to `dist/`, and serves the result on <http://localhost:3000>.
+    npm install
+
+Run locally (with hot-reload via Vite):
+
+    npm run dev
+
+Preview the production build locally:
+
+    npm run preview
+
+Formatting helpers:
+
+    npm run format        # runs both Elm and Prettier formatters
+    npm run format:elm    # run elm-format on `src/`
+    npm run format:prettier# format README.md with Prettier

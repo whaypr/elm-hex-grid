@@ -1,7 +1,7 @@
-'use strict'
+import { Elm } from './Main.elm';
 
-var mountNode = document.getElementById('main')
+const node = document.getElementById('main');
 
 Elm.Main.init({
-	node: mountNode
-})
+  node,
+});
