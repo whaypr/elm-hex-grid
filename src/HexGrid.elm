@@ -46,7 +46,7 @@ empty levels a =
             List.range 0 (levels * 2 - abs (levels - y))
                 |> List.map (\n -> ( ( n - min y levels, y - levels ), a ))
     in
-        HexGrid levels (Dict.fromList <| List.concatMap (\n -> row n) (List.range 0 (2 * levels)))
+    HexGrid levels (Dict.fromList <| List.concatMap (\n -> row n) (List.range 0 (2 * levels)))
 
 
 
@@ -59,7 +59,7 @@ fromList radius defaultVal pairs =
         reducer ( coord, val ) memo =
             insert coord val memo
     in
-        List.foldl reducer (empty radius defaultVal) pairs
+    List.foldl reducer (empty radius defaultVal) pairs
 
 
 
@@ -97,6 +97,7 @@ insert : Point -> a -> HexGrid a -> HexGrid a
 insert point v ((HexGrid r dict) as grid) =
     if not (contains point grid) then
         grid
+
     else
         HexGrid r (Dict.insert point v dict)
 
@@ -130,10 +131,11 @@ pathfind start end obstacles grid =
                         Just next ->
                             accum next (next :: path)
     in
-        if Set.member start obstacles then
-            []
-        else
-            accum end []
+    if Set.member start obstacles then
+        []
+
+    else
+        accum end []
 
 
 
@@ -160,6 +162,7 @@ pathGraph start end obstacles grid =
                     -- No point in building the graph further.
                     if curr == end then
                         cameFrom
+
                     else
                         let
                             ( frontier_, cameFrom_ ) =
@@ -170,9 +173,9 @@ pathGraph start end obstacles grid =
                                         |> List.filter (\p -> not <| Set.member p obstacles)
                                     )
                         in
-                            accum frontier_ cameFrom_
+                        accum frontier_ cameFrom_
     in
-        accum [ start ] (Dict.singleton start Nothing)
+    accum [ start ] (Dict.singleton start Nothing)
 
 
 
@@ -188,8 +191,10 @@ pathGraphHelp :
 pathGraphHelp grid curr next ( frontier, cameFrom ) =
     if Dict.member next cameFrom then
         ( frontier, cameFrom )
+
     else if not <| contains next grid then
         ( frontier, cameFrom )
+
     else
         ( List.append frontier [ next ]
         , Dict.insert next (Just curr) cameFrom
@@ -205,6 +210,7 @@ fringesHelp nbor ( visited, fringeLevel ) =
     if Set.member nbor visited then
         -- If nbor is already visited, do nothing
         ( visited, fringeLevel )
+
     else
         -- Else, since nbor is not a wall, add it to the fringe level
         -- and mark it as visited
@@ -220,6 +226,7 @@ fringes start maxSteps obstacles =
         accum currStep visited fringe =
             if currStep > maxSteps then
                 fringe
+
             else
                 let
                     prevStepPoints : List Point
@@ -239,13 +246,14 @@ fringes start maxSteps obstacles =
                                 |> List.filter (\p -> not <| Set.member p obstacles)
                             )
                 in
-                    accum (currStep + 1) visited_ (Array.push fringeLevel fringe)
+                accum (currStep + 1) visited_ (Array.push fringeLevel fringe)
     in
-        -- Short-circuit if starting point is an obstacle
-        if Set.member start obstacles then
-            Array.empty
-        else
-            accum 1 (Set.singleton start) (Array.fromList [ Set.singleton start ])
+    -- Short-circuit if starting point is an obstacle
+    if Set.member start obstacles then
+        Array.empty
+
+    else
+        accum 1 (Set.singleton start) (Array.fromList [ Set.singleton start ])
 
 
 {-| Returns set of points reachable from a starting point within
@@ -285,10 +293,11 @@ countSteps start end obstacles maxSteps =
                     ---let _ = Debug.log "pts" pts in
                     if Set.member end pts then
                         Just level
+
                     else
                         Nothing
     in
-        Array.foldl accum Nothing (Array.indexedMap (\index value -> ( index, value )) fringe)
+    Array.foldl accum Nothing (Array.indexedMap (\index value -> ( index, value )) fringe)
 
 
 {-| Creates a map of Point -> stepCount to reach that point.
@@ -306,7 +315,7 @@ stepCounts maxSteps obstacles start =
         accum ( level, pts ) dict =
             Set.foldl (\p -> Dict.insert p level) dict pts
     in
-        Array.foldl accum Dict.empty (Array.indexedMap (\index value -> ( index, value )) fringe)
+    Array.foldl accum Dict.empty (Array.indexedMap (\index value -> ( index, value )) fringe)
 
 
 {-| Returns set of points that point `eye` cannot see
@@ -324,17 +333,19 @@ fogOfWar eye obstacles grid =
                 fogAccum point ( hitWall, accumulatedFog ) =
                     if hitWall then
                         ( True, Set.insert point accumulatedFog )
+
                     else if Set.member point obstacles then
                         ( True, Set.insert point accumulatedFog )
+
                     else
                         ( False, accumulatedFog )
 
                 ( _, finalFogPoints ) =
                     List.foldl fogAccum ( False, Set.empty ) path
             in
-                Set.union obstructed finalFogPoints
+            Set.union obstructed finalFogPoints
     in
-        foldl accum Set.empty grid
+    foldl accum Set.empty grid
 
 
 {-| Return list of (Point, val) that satisfy the predicate.
@@ -356,12 +367,12 @@ rotate direction point =
         ( x, y, z ) =
             axialToCube point
     in
-        case direction of
-            Right ->
-                ( -z, -y )
+    case direction of
+        Right ->
+            ( -z, -y )
 
-            Left ->
-                ( -y, -x )
+        Left ->
+            ( -y, -x )
 
 
 {-| Tests whether given point is within grid.
@@ -372,16 +383,20 @@ contains (( x, z ) as coord) (HexGrid radius _) =
         offset =
             radius * 2 - abs z
     in
-        if z < -radius then
-            False
-        else if z > radius then
-            False
-        else if x + radius + min 0 z < 0 then
-            False
-        else if x > offset - radius - min 0 z then
-            False
-        else
-            True
+    if z < -radius then
+        False
+
+    else if z > radius then
+        False
+
+    else if x + radius + min 0 z < 0 then
+        False
+
+    else if x > offset - radius - min 0 z then
+        False
+
+    else
+        True
 
 
 {-| Get the cells in the grid's outer layer.
@@ -394,20 +409,20 @@ outermost ((HexGrid r _) as grid) =
                 ( x, y, z ) =
                     axialToCube point
             in
-                x
-                    == r
-                    || x
-                    == -r
-                    || y
-                    == r
-                    || y
-                    == -r
-                    || z
-                    == r
-                    || z
-                    == -r
+            x
+                == r
+                || x
+                == -r
+                || y
+                == r
+                || y
+                == -r
+                || z
+                == r
+                || z
+                == -r
     in
-        filter pred grid
+    filter pred grid
 
 
 {-| Get the numerical direction from one point
@@ -421,26 +436,26 @@ directionTo p1 p2 =
                 ( dx, dz ) =
                     pointSubtract adjacentPoint p1
             in
-                if dx == 1 && dz == 0 then
-                    Just 0
+            if dx == 1 && dz == 0 then
+                Just 0
 
-                else if dx == 1 && dz == -1 then
-                    Just 1
+            else if dx == 1 && dz == -1 then
+                Just 1
 
-                else if dx == 0 && dz == -1 then
-                    Just 2
+            else if dx == 0 && dz == -1 then
+                Just 2
 
-                else if dx == -1 && dz == 0 then
-                    Just 3
+            else if dx == -1 && dz == 0 then
+                Just 3
 
-                else if dx == -1 && dz == 1 then
-                    Just 4
+            else if dx == -1 && dz == 1 then
+                Just 4
 
-                else if dx == 0 && dz == 1 then
-                    Just 5
+            else if dx == 0 && dz == 1 then
+                Just 5
 
-                else
-                    Nothing
+            else
+                Nothing
 
         _ ->
             Nothing
@@ -484,7 +499,7 @@ distance coord1 coord2 =
         ( x2, y2, z2 ) =
             axialToCube coord2
     in
-        ((abs <| x1 - x2) + (abs <| y1 - y2) + (abs <| z1 - z2)) // 2
+    ((abs <| x1 - x2) + (abs <| y1 - y2) + (abs <| z1 - z2)) // 2
 
 
 {-| Check if two grids have equal contents.
@@ -493,8 +508,10 @@ equal : HexGrid a -> HexGrid a -> Bool
 equal (HexGrid r1 dict1) (HexGrid r2 dict2) =
     if r1 /= r2 then
         False
+
     else if Dict.toList dict1 /= Dict.toList dict2 then
         False
+
     else
         True
 
@@ -510,6 +527,7 @@ line : Point -> Point -> List Point
 line p1 p2 =
     if p1 == p2 then
         []
+
     else
         let
             n =
@@ -518,13 +536,13 @@ line p1 p2 =
             pts =
                 List.map toFloat (List.range 0 n)
         in
-            List.map
-                (\i ->
-                    pointMult p1 (1 - (i / toFloat n))
-                        |> pointAdd (pointMult p2 (i / toFloat n))
-                        |> pointRound
-                )
-                pts
+        List.map
+            (\i ->
+                pointMult p1 (1 - (i / toFloat n))
+                    |> pointAdd (pointMult p2 (i / toFloat n))
+                    |> pointRound
+            )
+            pts
 
 
 {-| Gets list of all points within `n` radius of given point.
@@ -551,24 +569,26 @@ ring r ( x, z ) =
 
         -- move southwest r tiles
     in
-        if r < 0 then
-            []
-        else
-            let
-                directions =
-                    List.concatMap (\j -> List.repeat r j) (List.range 0 5)
+    if r < 0 then
+        []
 
-                step direction ( current, points ) =
-                    let
-                        next =
-                            neighbor direction current
-                    in
-                        ( next, next :: points )
+    else
+        let
+            directions =
+                List.concatMap (\j -> List.repeat r j) (List.range 0 5)
 
-                ( _, reversedPoints ) =
-                    List.foldl step ( p, [ p ] ) directions
-            in
-                List.reverse reversedPoints
+            step direction ( current, points ) =
+                let
+                    next =
+                        neighbor direction current
+                in
+                ( next, next :: points )
+
+            ( _, reversedPoints ) =
+                List.foldl step ( p, [ p ] ) directions
+        in
+        List.reverse reversedPoints
+
 
 {-| Start at the center and spiral outwards until all points at
 radius `r` are included. Spiral jumps out to the southwest tile.
@@ -579,14 +599,15 @@ spiralOut (( x, z ) as center) r =
         accum currRadius points =
             if currRadius > r then
                 points
+
             else
                 let
                     pointsInRing =
                         ring currRadius center
                 in
-                    accum (currRadius + 1) (List.append points pointsInRing)
+                accum (currRadius + 1) (List.append points pointsInRing)
     in
-        accum 1 [ center ]
+    accum 1 [ center ]
 
 
 {-| 0 is the adjacent cell to the east. Increments
@@ -618,7 +639,7 @@ neighbor direction ( x, z ) =
                 _ ->
                     ( 0, 0 )
     in
-        toPoint (x + dx) (z + dz)
+    toPoint (x + dx) (z + dz)
 
 
 
@@ -643,12 +664,14 @@ pointRound ( x, z ) =
         dz =
             abs (toFloat rz - z)
     in
-        if dx > dy && dx > dz then
-            ( -ry - rz, rz )
-        else if dy > dz then
-            ( rx, rz )
-        else
-            ( rx, -rx - ry )
+    if dx > dy && dx > dz then
+        ( -ry - rz, rz )
+
+    else if dy > dz then
+        ( rx, rz )
+
+    else
+        ( rx, -rx - ry )
 
 
 pointMult : Point -> Float -> ( Float, Float )
@@ -747,7 +770,7 @@ hexToPixel layout ( q, r ) =
         y =
             (params.f2 * toFloat q + params.f3 * toFloat r) * layout.screenY
     in
-        ( x + layout.originX, y + layout.originY )
+    ( x + layout.originX, y + layout.originY )
 
 
 hexCornerOffset : Layout -> Float -> ( Float, Float )
@@ -759,7 +782,7 @@ hexCornerOffset layout corner =
         angle =
             2.0 * pi * (corner + params.startAngle) / 6
     in
-        ( layout.screenX * cos angle, layout.screenY * sin angle )
+    ( layout.screenX * cos angle, layout.screenY * sin angle )
 
 
 polygonCorners : Layout -> Point -> List ( Float, Float )
@@ -771,6 +794,7 @@ polygonCorners layout point =
         accum i corners =
             if i == 6 then
                 corners
+
             else
                 let
                     ( offsetX, offsetY ) =
@@ -781,9 +805,9 @@ polygonCorners layout point =
                             corners
                             [ ( centerX + offsetX, centerY + offsetY ) ]
                 in
-                    accum (i + 1) newCorners
+                accum (i + 1) newCorners
     in
-        accum 0 []
+    accum 0 []
 
 
 
@@ -811,7 +835,7 @@ pathfindWithCost calcCost start end grid =
                         Just next ->
                             accum next (next :: path)
     in
-        accum end []
+    accum end []
 
 
 pathGraph2 : (Point -> Point -> Int) -> Point -> Point -> HexGrid a -> Dict Point (Maybe Point)
@@ -832,6 +856,7 @@ pathGraph2 calcCost start end grid =
                     -- No point in building the graph further.
                     if curr == end then
                         cameFrom
+
                     else
                         let
                             ( frontier_, costSoFar_, cameFrom_ ) =
@@ -840,12 +865,12 @@ pathGraph2 calcCost start end grid =
                                     ( PairingHeap.fromList rest, costSoFar, cameFrom )
                                     (neighbors curr)
                         in
-                            accum frontier_ costSoFar_ cameFrom_
+                        accum frontier_ costSoFar_ cameFrom_
     in
-        accum
-            (PairingHeap.singleton 0 start)
-            (Dict.singleton start 0)
-            (Dict.singleton start Nothing)
+    accum
+        (PairingHeap.singleton 0 start)
+        (Dict.singleton start 0)
+        (Dict.singleton start Nothing)
 
 
 
@@ -863,6 +888,7 @@ pathGraphHelp2 calcCost grid curr next (( frontier, costSoFar, cameFrom ) as mem
     --let _ = Debug.log "[pathGraphHelp2] curr, next" (curr, next) in
     if not <| contains next grid then
         ( frontier, costSoFar, cameFrom )
+
     else
         let
             currCost =
@@ -876,15 +902,16 @@ pathGraphHelp2 calcCost grid curr next (( frontier, costSoFar, cameFrom ) as mem
             newCost =
                 currCost + calcCost curr next
         in
-            if (not <| Dict.member next costSoFar) || newCost < currCost then
-                -- if newCost >= currCost then
-                --   (frontier, costSoFar, cameFrom)
-                ( -- frontier
-                  PairingHeap.insert ( newCost, next ) frontier
-                  -- costSoFar
-                , Dict.insert next newCost costSoFar
-                  -- cameFrom
-                , Dict.insert next (Just curr) cameFrom
-                )
-            else
-                ( frontier, costSoFar, cameFrom )
+        if (not <| Dict.member next costSoFar) || newCost < currCost then
+            -- if newCost >= currCost then
+            --   (frontier, costSoFar, cameFrom)
+            ( -- frontier
+              PairingHeap.insert ( newCost, next ) frontier
+              -- costSoFar
+            , Dict.insert next newCost costSoFar
+              -- cameFrom
+            , Dict.insert next (Just curr) cameFrom
+            )
+
+        else
+            ( frontier, costSoFar, cameFrom )

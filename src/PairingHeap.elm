@@ -1,16 +1,9 @@
-module PairingHeap
-    exposing
-        ( PairingHeap
-        , deleteMin
-        , empty
-        , findMin
-        , fromList
-        , insert
-        , isEmpty
-        , merge
-        , singleton
-        , toSortedList
-        )
+module PairingHeap exposing
+    ( PairingHeap, empty
+    , insert, merge, findMin, deleteMin
+    , fromList, toSortedList
+    , isEmpty, singleton
+    )
 
 {-| This is a simple pairing heap implementation written in Elm usable as a priority queue. This code is
 based heavily on the pseudocode available at [the Wikipedia page](https://en.wikipedia.org/wiki/Pairing_heap).
@@ -69,7 +62,7 @@ singleton k v =
 
 Complexity: O(1)
 
-    findMin (fromList [(10, ()), (3, ()), (8, ())]) == Just 3
+    findMin (fromList [ ( 10, () ), ( 3, () ), ( 8, () ) ]) == Just 3
 
 -}
 findMin : PairingHeap comparable a -> Maybe ( comparable, a )
@@ -99,6 +92,7 @@ merge heap1 heap2 =
         ( Heap k1 v1 hs1, Heap k2 v2 hs2 ) ->
             if k1 < k2 then
                 Heap k1 v1 (heap2 :: hs1)
+
             else
                 Heap k2 v2 (heap1 :: hs2)
 
