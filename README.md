@@ -22,6 +22,6 @@ Preview the production build locally:
 
 Formatting helpers:
 
-    npm run format        # runs both Elm and Prettier formatters
-    npm run format:elm    # run elm-format on `src/`
-    npm run format:prettier# format README.md with Prettier
+    npm run format          # runs both Elm and Prettier formatters
+    npm run format:elm      # run elm-format on `src/`
+    npm run format:prettier # format README.md with Prettier
